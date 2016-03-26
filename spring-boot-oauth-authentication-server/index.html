@@ -1,0 +1,308 @@
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>Spring Boot oAuth Authentication Server</title>
+    <meta name="description" content="">
+
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="shortcut icon" href="../favicon.ico">
+
+    <link rel="stylesheet" type="text/css" href="../assets/css/prism.css?v=2609d42a77">
+    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=2609d42a77">
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic%7COpen+Sans:700,400">
+
+    <link rel="canonical" href="http://localhost:2368/spring-boot-oauth-authentication-server/">
+    <meta name="referrer" content="origin">
+    
+    <meta property="og:site_name" content="Software &amp; stuff">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Spring Boot oAuth Authentication Server">
+    <meta property="og:description" content="I needed small server to have a easy way to test oAuth integration. Recently Spring Boot 1.3 was released with simplified oAuth support, so I decided to  build one and dockenize it. Spring boot details can be found here Authentication Server So to create simple authentication server we need">
+    <meta property="og:url" content="http://localhost:2368/spring-boot-oauth-authentication-server/">
+    <meta property="article:published_time" content="2015-12-13T14:48:59.995Z">
+    <meta property="article:modified_time" content="2015-12-13T14:48:59.993Z">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Spring Boot oAuth Authentication Server">
+    <meta name="twitter:description" content="I needed small server to have a easy way to test oAuth integration. Recently Spring Boot 1.3 was released with simplified oAuth support, so I decided to  build one and dockenize it. Spring boot details can be found here Authentication Server So to create simple authentication server we need">
+    <meta name="twitter:url" content="http://localhost:2368/spring-boot-oauth-authentication-server/">
+    
+    <script type="application/ld+json">
+{
+    "@context": "http://schema.org",
+    "@type": "Article",
+    "publisher": "Software & stuff",
+    "author": {
+        "@type": "Person",
+        "name": "Piotr Wielgolaski",
+        "image": "http://localhost:2368/content/images/2016/03/3696319-1.jpeg",
+        "url": "http://localhost:2368/author/pwielgolaski/",
+        "description": "Software enthusiast"
+    },
+    "headline": "Spring Boot oAuth Authentication Server",
+    "url": "http://localhost:2368/spring-boot-oauth-authentication-server/",
+    "datePublished": "2015-12-13T14:48:59.995Z",
+    "dateModified": "2015-12-13T14:48:59.993Z",
+    "description": "I needed small server to have a easy way to test oAuth integration. Recently Spring Boot 1.3 was released with simplified oAuth support, so I decided to  build one and dockenize it. Spring boot details can be found here Authentication Server So to create simple authentication server we need"
+}
+    </script>
+
+    <meta name="generator" content="Ghost 0.7">
+    <link rel="alternate" type="application/rss+xml" title="Software &amp; stuff" href="http://localhost:2368/rss/">
+    <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-70678760-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+</head>
+<body class="post-template nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="index.html#" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+            <li class="nav-home" role="presentation"><a href="http://wielgolaski.me/">Home</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="http://localhost:2368/rss/">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+
+    <div class="site-wrapper">
+
+        
+
+
+<header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        
+            <a class="menu-button icon-menu" href="index.html#"><span class="word">Menu</span></a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Spring Boot oAuth Authentication Server</h1>
+            <section class="post-meta">
+                <time class="post-date" datetime="2015-12-13">13 December 2015</time> 
+            </section>
+        </header>
+
+        <section class="post-content">
+            <p>I needed small server to have a easy way to test oAuth integration.</p>
+
+<p>Recently Spring Boot 1.3 was released with simplified oAuth support, so I decided to  build one and dockenize it.</p>
+
+<p>Spring boot details can be found <a href="http://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#boot-features-security-oauth2">here</a></p>
+
+<h3 id="authenticationserver">Authentication Server</h3>
+
+<p>So to create simple authentication server we need (<em>imports removed from code</em>)  </p>
+
+<pre><code class="language-java">package me.wielgolaski.auth;
+
+@SpringBootApplication
+@RestController
+public class AuthServerApplication extends WebSecurityConfigurerAdapter {
+
+    @RequestMapping({"/user", "/me"})
+    public Map&lt;String, String&gt; user(Principal principal) {
+        return Collections.singletonMap("name", principal.getName());
+    }
+
+    @Configuration
+    @EnableAuthorizationServer
+    protected static class MyOAuth2AuthorizationServerConfiguration extends OAuth2AuthorizationServerConfiguration {
+        @Override
+        public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
+            super.configure(security);
+            security.allowFormAuthenticationForClients();
+        }
+    }
+
+    @Configuration
+    @EnableResourceServer
+    protected static class ResourceServerConfiguration
+            extends ResourceServerConfigurerAdapter {
+        @Override
+        public void configure(HttpSecurity http) throws Exception {
+            http.antMatcher("/me").authorizeRequests().anyRequest().authenticated();
+        }
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(AuthServerApplication.class, args);
+    }
+}
+</code></pre>
+
+<p>and configuration  </p>
+
+<pre><code class="language-yaml">security:  
+  user:
+    password: secret
+  oauth2:
+    client:
+      clientId: myclient
+      clientSecret: mysecret
+      scope: access
+      auto-approve-scopes: '.*'
+    authorization:
+      checkTokenAccess: permitAll()
+</code></pre>
+
+<p>What we get out of it, is server that supports all four grant flows for </p>
+
+<ul>
+<li>user (user:password)</li>
+<li>client (myclient:mysecret)</li>
+</ul>
+
+<p>For example password grant type can be tested  </p>
+
+<pre><code>$ curl myclient:mysecret@localhost:8080/oauth/token -d grant_type=password -d username=user -d password=secret
+{"access_token":"5a4e2f2e-ab73-443e-ab4c-58da9c5cef76","token_type":"bearer","refresh_token":"49caec7d-8835-42b5-8d60-e93e8e77597f","expires_in":43199,"scope":"access"}
+</code></pre>
+
+<p>On top of that we have endpoint <code>/me</code> that can be used by authentication party to get information about currently logged user.</p>
+
+<pre><code>$ curl "localhost:8080/me?access_token=5a4e2f2e-ab73-443e-ab4c-58da9c5cef76"
+{"name":"user"}
+</code></pre>
+
+<h3 id="dockenizeit">Dockenize it</h3>
+
+<p>So we have server, but it could be cool to use it in docker. <br>
+Let's push image to docker hub for others to use.</p>
+
+<p>Dockerfile  </p>
+
+<pre><code class="language-docker">FROM anapsix/alpine-java:8
+
+WORKDIR /code
+
+ADD target/auth-server-0.0.1-SNAPSHOT.jar /code/auth-server.jar
+
+EXPOSE 8080
+
+ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom", "-jar", "auth-server.jar"]
+</code></pre>
+
+<p>and helpful Makefile to simplify commands</p>
+
+<pre><code>PROJECT = spring-boot-auth-server  
+REGISTRY = pwielgolaski
+
+build: target  
+    docker build -t $(REGISTRY)/$(PROJECT) .
+target:  
+    mvn package -DskipTests
+run:  
+    docker run -p 8080:8080 $(REGISTRY)/$(PROJECT)
+push:  
+    docker push $(REGISTRY)/$(PROJECT)
+</code></pre>
+
+<p>So now if you want to use it, just run  </p>
+
+<pre><code>docker run -p 8080:8080 pwielgolaski/spring-boot-auth-server  
+</code></pre>
+
+<p>Project can be found on <a href="https://github.com/pwielgolaski/spring-boot-auth-server">github</a></p>
+        </section>
+
+        <footer class="post-footer">
+
+
+            <figure class="author-image">
+                <a class="img" href="../author/pwielgolaski/" style="background-image: url(../content/images/2016/03/3696319-1.jpeg)"><span class="hidden">Piotr Wielgolaski's Picture</span></a>
+            </figure>
+
+            <section class="author">
+                <h4><a href="../author/pwielgolaski/">Piotr Wielgolaski</a></h4>
+
+                    <p>Software enthusiast</p>
+                <div class="author-meta">
+                    
+                    
+                </div>
+            </section>
+
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="https://twitter.com/intent/tweet?text=Spring%20Boot%20oAuth%20Authentication%20Server&amp;url=http://localhost:2368/spring-boot-oauth-authentication-server/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://localhost:2368/spring-boot-oauth-authentication-server/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=http://localhost:2368/spring-boot-oauth-authentication-server/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <div id="disqus_thread"></div>
+            <script>
+            /**
+            * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+            * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+            */
+            var disqus_config = function () {
+            this.page.url = 'http://localhost:2368/spring-boot-oauth-authentication-server/'; // Replace PAGE_URL with your page's canonical URL variable
+            this.page.identifier = 'ghost-3'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+            };
+            (function() { // DON'T EDIT BELOW THIS LINE
+            var d = document, s = d.createElement('script');
+
+            s.src = '//wielgolaski.disqus.com/embed.js';
+
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+            })();
+            </script>
+            <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+        </footer>
+
+    </article>
+</main>
+
+<aside class="read-next">
+    <a class="read-next-story prev no-cover" href="../expcetion-tracking-with-sentry/">
+        <section class="post">
+            <h2>Exception tracking with Sentry</h2>
+            <p>Introduction I was looking for exception tracking system to improve quality of my project, so I took a look…</p>
+        </section>
+    </a>
+</aside>
+
+
+
+        <footer class="site-footer clearfix">
+            <section class="copyright"><a href="http://localhost:2368">Software &amp; stuff</a> © 2016</section>
+            <section class="poweredby">Proudly published with <a href="https://ghost.org">Ghost</a></section>
+        </footer>
+
+    </div>
+
+    
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=2609d42a77"></script>
+    <script type="text/javascript" src="../assets/js/prism.js?v=2609d42a77"></script>
+    <script type="text/javascript" src="../assets/js/index.js?v=2609d42a77"></script>
+    <script id="dsq-count-scr" src="http://wielgolaski.disqus.com/count.js" async></script>
+
+</body>

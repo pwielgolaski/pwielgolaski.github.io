@@ -1,0 +1,316 @@
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>Exception tracking with Sentry</title>
+    <meta name="description" content="">
+
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="shortcut icon" href="../favicon.ico">
+
+    <link rel="stylesheet" type="text/css" href="../assets/css/prism.css?v=2609d42a77">
+    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=2609d42a77">
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic%7COpen+Sans:700,400">
+
+    <link rel="canonical" href="http://localhost:2368/expcetion-tracking-with-sentry/">
+    <meta name="referrer" content="origin">
+    
+    <meta property="og:site_name" content="Software &amp; stuff">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Exception tracking with Sentry">
+    <meta property="og:description" content="Introduction I was looking for exception tracking system to improve quality of my project, so I took a look at available options like ones from 5 Error Tracking Tools Java Developers Should Know. There is a lot of nice looking solution that are sold as SaS, but I needed something">
+    <meta property="og:url" content="http://localhost:2368/expcetion-tracking-with-sentry/">
+    <meta property="article:published_time" content="2015-11-28T14:24:13.631Z">
+    <meta property="article:modified_time" content="2015-11-29T14:13:15.219Z">
+    <meta property="article:tag" content="sentry">
+    <meta property="article:tag" content="devops">
+    <meta property="article:tag" content="spring">
+    
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Exception tracking with Sentry">
+    <meta name="twitter:description" content="Introduction I was looking for exception tracking system to improve quality of my project, so I took a look at available options like ones from 5 Error Tracking Tools Java Developers Should Know. There is a lot of nice looking solution that are sold as SaS, but I needed something">
+    <meta name="twitter:url" content="http://localhost:2368/expcetion-tracking-with-sentry/">
+    
+    <script type="application/ld+json">
+{
+    "@context": "http://schema.org",
+    "@type": "Article",
+    "publisher": "Software & stuff",
+    "author": {
+        "@type": "Person",
+        "name": "Piotr Wielgolaski",
+        "image": "http://localhost:2368/content/images/2016/03/3696319-1.jpeg",
+        "url": "http://localhost:2368/author/pwielgolaski/",
+        "description": "Software enthusiast"
+    },
+    "headline": "Exception tracking with Sentry",
+    "url": "http://localhost:2368/expcetion-tracking-with-sentry/",
+    "datePublished": "2015-11-28T14:24:13.631Z",
+    "dateModified": "2015-11-29T14:13:15.219Z",
+    "keywords": "sentry, devops, spring",
+    "description": "Introduction I was looking for exception tracking system to improve quality of my project, so I took a look at available options like ones from 5 Error Tracking Tools Java Developers Should Know. There is a lot of nice looking solution that are sold as SaS, but I needed something"
+}
+    </script>
+
+    <meta name="generator" content="Ghost 0.7">
+    <link rel="alternate" type="application/rss+xml" title="Software &amp; stuff" href="http://localhost:2368/rss/">
+    <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-70678760-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+</head>
+<body class="post-template tag-sentry tag-devops tag-spring nav-closed">
+
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="index.html#" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+            <li class="nav-home" role="presentation"><a href="http://wielgolaski.me/">Home</a></li>
+    </ul>
+    <a class="subscribe-button icon-feed" href="http://localhost:2368/rss/">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+
+    <div class="site-wrapper">
+
+        
+
+
+<header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        
+            <a class="menu-button icon-menu" href="index.html#"><span class="word">Menu</span></a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+    <article class="post tag-sentry tag-devops tag-spring">
+
+        <header class="post-header">
+            <h1 class="post-title">Exception tracking with Sentry</h1>
+            <section class="post-meta">
+                <time class="post-date" datetime="2015-11-28">28 November 2015</time>  on <a href="../tag/sentry/">sentry</a>, <a href="../tag/devops/">devops</a>, <a href="../tag/spring/">spring</a>
+            </section>
+        </header>
+
+        <section class="post-content">
+            <h2 id="introduction">Introduction</h2>
+
+<p>I was looking for exception tracking system to improve quality of my project, so I took a look at available options like ones from <a href="http://blog.takipi.com/5-error-tracking-tools-java-developers-should-know/">5 Error Tracking Tools Java Developers Should Know</a>.</p>
+
+<p>There is a lot of nice looking solution that are sold as SaS, but I needed something to setup behind my corporate firewall, so I gave a try and decided to setup <strong>Sentry</strong>.</p>
+
+<p>This is short instruction how to setup Sentry with docker and send data from SpringBoot application, after that you have make your own option does it make sense to move it further.</p>
+
+<p>I really like to use docker for all kind of Proof-Of-Concept linux installation; it is always easier to trash everything away. If you are not familiar with Docker or Docker Compose, I recommend to take a look at <a href="https://docs.docker.com/">Docker</a></p>
+
+<h2 id="composesentry">Compose Sentry</h2>
+
+<p>I found really helpful project that let me start <a href="https://github.com/slafs/sentry-docker">sentry-docker</a>.</p>
+
+<p>After some reading through documentation of <a href="https://github.com/slafs/sentry-docker">sentry-docker</a> &amp; <a href="https://docs.getsentry.com/on-premise/server/installation/">Sentry on-premise</a> I come up with docker-compose.yml  </p>
+
+<pre><code class="language-yaml">redis:  
+    image: redis
+
+db:  
+    image: postgres
+
+sentrycelery: &amp;DEFAULT  
+  image: slafs/sentry
+  command: "celery worker -B -l INFO"
+  links:
+    - redis:redis
+    - db:postgresdb
+  environment:
+    SECRET_KEY: '123123123'
+    SENTRY_URL_PREFIX: 'http://dockerhost'
+    SENTRY_SINGLE_ORGANIZATION: 'True'
+    SENTRY_INITIAL_TEAM: 'testteam'
+    SENTRY_INITIAL_PROJECT: 'testproject'
+    SENTRY_INITIAL_KEY: 'pub:sec'
+    SENTRY_INITIAL_PLATFORM: 'java_logback'
+    SENTRY_DOCKER_DO_DB_CHECK: 'yes'
+    CELERY_ALWAYS_EAGER: 'False'
+    CACHE_URL: 'hiredis://redis:6379/2'
+    DATABASE_URL: 'postgres://postgres:@postgresdb/postgres'
+    C_FORCE_ROOT: 'true'
+
+sentryweb:  
+  &lt;&lt;: *DEFAULT  # "inherit" from the configuration above
+  command: "start"
+  ports:
+   - "80:9000"
+</code></pre>
+
+<p>What it does, it starts postgres, redis and two containers for sentry(worker&amp;web). It wires them together and also creates initial setup like team&amp;project. <br>
+I picked integration with Logback, but you can use different ways of <a href="https://docs.getsentry.com/on-premise/quickstart/#pick-a-client-integration">integrations</a>.</p>
+
+<p>No it time to just spin our containers with command <code>docker-compose up</code></p>
+
+<p>When I go to <a href="http://dockerhost">http://dockerhost</a> (it is my local name of docker machine as I used it on OSX) I have login screen <br>
+<img src="../content/images/2015/11/login-1.png" alt="login">
+Default user is admin/admin, after successful login application dashboard is presented <br>
+<img src="../content/images/2015/11/Screen-Shot-2015-11-28-at-15-07-31.png" alt="dashboard">
+or project view <br>
+<img src="../content/images/2015/11/Screen-Shot-2015-11-28-at-15-13-11.png" alt="project view"></p>
+
+<h2 id="testapplication">Test application</h2>
+
+<p>Let's build test application based on Spring Boot app that just log exceptions.  </p>
+
+<pre><code class="language-java">@SpringBootApplication
+@RestController
+public class SentryApplication {
+
+    private final static Logger logger = LoggerFactory.getLogger(SentryApplication.class);
+
+    public static void main(String[] args) {
+        SpringApplication.run(SentryApplication.class, args);
+    }
+
+    @RequestMapping(method = RequestMethod.GET)
+    public String generateErrors() {
+        logException(new NullPointerException("NPE"));
+        logException(new IllegalArgumentException("Illegal"));
+        return "Exceptions generated";
+    }
+
+    private void logException(Exception ex) {
+        logger.error("Logger message for " + ex.getClass().getSimpleName(), ex);
+    }
+}
+</code></pre>
+
+<p>There is need to configure also logger properly to send information to Sentry and it is done in logback.xml  </p>
+
+<pre><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;  
+&lt;configuration&gt;  
+    &lt;include resource="org/springframework/boot/logging/logback/defaults.xml" /&gt;
+    &lt;property name="LOG_FILE" value="${LOG_FILE:-${LOG_PATH:-${LOG_TEMP:-${java.io.tmpdir:-/tmp}}/}spring.log}"/&gt;
+    &lt;include resource="org/springframework/boot/logging/logback/console-appender.xml" /&gt;
+
+    &lt;appender name="SENTRY" class="net.kencochrane.raven.logback.SentryAppender"&gt;
+        &lt;dsn&gt;http://pub:sec@dockerhost/2&lt;/dsn&gt;
+        &lt;filter class="ch.qos.logback.classic.filter.ThresholdFilter"&gt;
+            &lt;level&gt;WARN&lt;/level&gt;
+        &lt;/filter&gt;
+    &lt;/appender&gt;
+
+    &lt;root level="INFO"&gt;
+        &lt;appender-ref ref="CONSOLE" /&gt;
+        &lt;appender-ref ref="SENTRY" /&gt;
+    &lt;/root&gt;
+
+&lt;/configuration&gt;  
+</code></pre>
+
+<p>The most important bit of information is in <strong>dsn</strong> property where logger is pointed to our Sentry installation.</p>
+
+<p>To make initial publication just start application and go to <a href="http://localhost:8080">http://localhost:8080</a>.</p>
+
+<p>In project view now I can now see. <br>
+<img src="../content/images/2015/11/Screen-Shot-2015-11-28-at-15-20-00.png" alt="exceptions"></p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p><strong>Sentry</strong> is easy to setup exception tracking system, so you can give a try and install it on your machine to see if it is useful for you.</p>
+
+<p>Code available on <a href="https://github.com/pwielgolaski/sentry">GitHub</a></p>
+        </section>
+
+        <footer class="post-footer">
+
+
+            <figure class="author-image">
+                <a class="img" href="../author/pwielgolaski/" style="background-image: url(../content/images/2016/03/3696319-1.jpeg)"><span class="hidden">Piotr Wielgolaski's Picture</span></a>
+            </figure>
+
+            <section class="author">
+                <h4><a href="../author/pwielgolaski/">Piotr Wielgolaski</a></h4>
+
+                    <p>Software enthusiast</p>
+                <div class="author-meta">
+                    
+                    
+                </div>
+            </section>
+
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="https://twitter.com/intent/tweet?text=Exception%20tracking%20with%20Sentry&amp;url=http://localhost:2368/expcetion-tracking-with-sentry/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://localhost:2368/expcetion-tracking-with-sentry/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=http://localhost:2368/expcetion-tracking-with-sentry/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+            <div id="disqus_thread"></div>
+            <script>
+            /**
+            * RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+            * LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+            */
+            var disqus_config = function () {
+            this.page.url = 'http://localhost:2368/expcetion-tracking-with-sentry/'; // Replace PAGE_URL with your page's canonical URL variable
+            this.page.identifier = 'ghost-2'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+            };
+            (function() { // DON'T EDIT BELOW THIS LINE
+            var d = document, s = d.createElement('script');
+
+            s.src = '//wielgolaski.disqus.com/embed.js';
+
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+            })();
+            </script>
+            <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+        </footer>
+
+    </article>
+</main>
+
+<aside class="read-next">
+    <a class="read-next-story no-cover" href="../spring-boot-oauth-authentication-server/">
+        <section class="post">
+            <h2>Spring Boot oAuth Authentication Server</h2>
+            <p>I needed small server to have a easy way to test oAuth integration. Recently Spring Boot 1.3 was…</p>
+        </section>
+    </a>
+</aside>
+
+
+
+        <footer class="site-footer clearfix">
+            <section class="copyright"><a href="http://localhost:2368">Software &amp; stuff</a> © 2016</section>
+            <section class="poweredby">Proudly published with <a href="https://ghost.org">Ghost</a></section>
+        </footer>
+
+    </div>
+
+    
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=2609d42a77"></script>
+    <script type="text/javascript" src="../assets/js/prism.js?v=2609d42a77"></script>
+    <script type="text/javascript" src="../assets/js/index.js?v=2609d42a77"></script>
+    <script id="dsq-count-scr" src="http://wielgolaski.disqus.com/count.js" async></script>
+
+</body>
